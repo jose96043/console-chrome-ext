@@ -1,45 +1,70 @@
 'use strict';
 
-var FLAG = false;
-var CONSOLE = false;
-var CONSOLE_CLASSNAME = 'portocarrero_console';
+var init = (function() {
+	var flag = false,
+		consoleDisplay = false,
+		consoleClassName = 'portocarrero_console',
+		cacheInput = null,
 
-function displayConsole() {
-	var elemConsole = document.createElement('input');
-	elemConsole.className = CONSOLE_CLASSNAME;
-	elemConsole.style.cssText = 'z-index:10000000000; float:left; position:fixed; left: 0';
-	// elemDiv.style.cssText = 'position:absolute;width:100%;height:100%;opacity:0.3;z-index:100;background:#000;';
-	document.body.insertBefore(elemConsole, document.body.firstChild);
-}
+		displayConsole = function() {
+			var elemConsole = document.createElement('input');
+			elemConsole.className = consoleClassName;
+			document.body.insertBefore(elemConsole, document.body.firstChild);
+			elemConsole.focus();
+			consoleEvent();
+		},
 
-function removeConsole() {
-	var elements = document.getElementsByClassName(CONSOLE_CLASSNAME);
-	while (elements.length > 0) {
-		elements[0].parentNode.removeChild(elements[0]);
-	}
-}
+		removeConsole = function() {
+			var elemConsole = cachedElem();
+			elemConsole.parentNode.removeChild(elemConsole);
+		},
 
-function detectkeys(e) {
-	var evtobj = window.event ? event : e;
-	FLAG = evtobj.ctrlKey ? true : false;
-	if (FLAG && evtobj.keyCode === 192) {
-		if (!CONSOLE) {
-			console.log('SHIT ON');
-			displayConsole();
-			CONSOLE = true;
-		} else {
-			removeConsole();
-			console.log('SHIT OFF');
-			CONSOLE = false;
+		consoleListener = function(e) {
+			//On Enter pressed value would be read from input
+			if (e.keyCode === 13) {
+				var elemConsole = cachedElem(),
+				consoleValue = elemConsole.value;
+				handleCommand(consoleValue);
+				elemConsole.value = '';
+			}
+		},
+
+		consoleEvent = function() {
+			var el = cachedElem();
+			el.addEventListener('keypress', function(e) {
+				consoleListener(e);
+			});
+		},
+
+		handleCommand = function(command) {
+			console.log('HI', command);
+
+		},
+
+		cachedElem = function() {
+			if (cacheInput === null) {
+				cacheInput = document.getElementsByClassName(consoleClassName)[0];
+			}
+			return cacheInput;
+		};
+
+	return {
+		detectkeys: function(e) {
+			var evtobj = window.event ? event : e;
+			flag = evtobj.ctrlKey ? true : false;
+			if (flag && evtobj.keyCode === 192) {
+				if (!consoleDisplay) {
+					displayConsole();
+					consoleDisplay = true;
+				} else {
+					removeConsole();
+					consoleDisplay = false;
+				}
+				flag = false;
+			}
 		}
-		FLAG = false;
-	}
-	// var character = String.fromCharCode(evtobj.which);
-}
+	};
+})();
 
-
-
-document.onkeydown = detectkeys;
-
-console.log(document.querySelector('body'));
+document.onkeydown = init.detectkeys;
 console.log('\'Allo \'Allo! Content script');
